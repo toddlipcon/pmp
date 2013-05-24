@@ -17,6 +17,8 @@ namespace pmp {
 using std::tr1::unordered_set;
 using std::tr1::unordered_map;
 
+bool should_shutdown = false;
+
 class Summary {
 public:
   void Add(const vector<StackFrame> &frames) {
@@ -94,7 +96,7 @@ Status DoPmp(pid_t pid) {
   Summary summary;
   int samples = 0;
 
-  while (true) {
+  while (!should_shutdown) {
     usleep(1000);
     Status s = TakeSample(pid, &summary);
     if (!s.ok()) {
@@ -112,6 +114,14 @@ Status DoPmp(pid_t pid) {
   return Status::OK();
 }
 
+void HandleSigInt(int signal) {
+  should_shutdown = true;
+}
+
+void InstallSignalHandler() {
+  signal(SIGINT, HandleSigInt);
+}
+
 }
 
 using namespace pmp;
@@ -127,6 +137,8 @@ int main(int argc, char **argv) {
     std::cerr << "bad pid: " << argv[1] << std::endl;
     exit(2);
   }
+
+  InstallSignalHandler();
 
   Status s = DoPmp(pid);
   if (!s.ok()) {
