@@ -27,7 +27,7 @@ public:
 
     for (int i = frames.size() - 1; i >= 0; i--) {
       const StackFrame &f = frames[i];
-      if (i != 0) {
+      if (i != frames.size() - 1) {
         s.append("; ");
       }
       s.append(f.proc_name);
